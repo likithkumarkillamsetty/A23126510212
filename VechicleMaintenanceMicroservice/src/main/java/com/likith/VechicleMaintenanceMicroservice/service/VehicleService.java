@@ -10,8 +10,7 @@ import java.util.*;
 public class VehicleService {
 
     private static final String BASE_URL = "http://4.224.186.213/evaluation-service";
-    private static final String TOKEN = "";
-
+    private static final String TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJNYXBDbGFpbXMiOnsiYXVkIjoiaHR0cDovLzIwLjI0NC41Ni4xNDQvZXZhbHVhdGlvbi1zZXJ2aWNlIiwiZW1haWwiOiJraWxsYW1zZXR0eWxpa2l0aGt1bWFyLjIzLmNzZUBhbml0cy5lZHUuaW4iLCJleHAiOjE3ODIxOTcyODQsImlhdCI6MTc4MjE5NjM4NCwiaXNzIjoiQWZmb3JkIE1lZGljYWwgVGVjaG5vbG9naWVzIFByaXZhdGUgTGltaXRlZCIsImp0aSI6ImFmMWMzYzIyLWEzZWYtNDAwMS1iZWZmLWJmM2E0OTMzNTBlNCIsImxvY2FsZSI6ImVuLUlOIiwibmFtZSI6Imxpa2l0aCBrdW1hciBraWxsYW1zZXR0eSIsInN1YiI6IjAzZTZmYTZhLTg3ZmEtNGJlMy05NDA3LWM1YjE5YmZkNzQ2ZiJ9LCJlbWFpbCI6ImtpbGxhbXNldHR5bGlraXRoa3VtYXIuMjMuY3NlQGFuaXRzLmVkdS5pbiIsIm5hbWUiOiJsaWtpdGgga3VtYXIga2lsbGFtc2V0dHkiLCJyb2xsTm8iOiJhMjMxMjY1MTAyMTIiLCJhY2Nlc3NDb2RlIjoiTVRxeGFyIiwiY2xpZW50SUQiOiIwM2U2ZmE2YS04N2ZhLTRiZTMtOTQwNy1jNWIxOWJmZDc0NmYiLCJjbGllbnRTZWNyZXQiOiJXR0h0a3F1dVZXdm1CeFlLIn0.1Tn-guYWZ_j-hz3e07VSQ8TPU5zu5FhnsjDVrPNkGIk";
     private HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(TOKEN);
@@ -75,25 +74,24 @@ public class VehicleService {
 
     private List<String> knapsack(List<Map<String, Object>> vehicles, int capacity) {
         int n = vehicles.size();
-        int[][] dp = new int[n + 1][capacity + 1];
+        int[] dp = new int[capacity + 1];
 
-        for (int i = 1; i <= n; i++) {
-            int duration = (int) vehicles.get(i - 1).get("Duration");
-            int impact = (int) vehicles.get(i - 1).get("Impact");
-            for (int w = 0; w <= capacity; w++) {
-                dp[i][w] = dp[i - 1][w];
-                if (duration <= w) {
-                    dp[i][w] = Math.max(dp[i][w], dp[i - 1][w - duration] + impact);
-                }
+        for (int i = 0; i < n; i++) {
+            int duration = (int) vehicles.get(i).get("Duration");
+            int impact = (int) vehicles.get(i).get("Impact");
+            for (int w = capacity; w >= duration; w--) {
+                dp[w] = Math.max(dp[w], dp[w - duration] + impact);
             }
         }
 
         List<String> selected = new ArrayList<>();
         int w = capacity;
-        for (int i = n; i >= 1; i--) {
-            if (dp[i][w] != dp[i - 1][w]) {
-                selected.add((String) vehicles.get(i - 1).get("TaskID"));
-                w -= (int) vehicles.get(i - 1).get("Duration");
+        for (int i = n - 1; i >= 0; i--) {
+            int duration = (int) vehicles.get(i).get("Duration");
+            int impact = (int) vehicles.get(i).get("Impact");
+            if (w >= duration && dp[w] == dp[w - duration] + impact) {
+                selected.add((String) vehicles.get(i).get("TaskID"));
+                w -= duration;
             }
         }
 
